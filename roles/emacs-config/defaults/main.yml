@@ -1,0 +1,15 @@
+---
+playbook_dir_fallback: "{{ ansible_env.PWD }}"
+playbook_dir: "{{ playbook_dir | default(playbook_dir_fallback) }}"
+
+# Emacs directories to create - starting at ~/.emacs.d/
+emacs_main_directory: "{{ ansible_env.HOME }}/.emacs.d"
+emacs_directories:
+  - "{{ emacs_main_directory }}"
+  - "{{ emacs_main_directory }}/snippets"
+
+# Emacs configuration which should be enabled or disabled
+# By default everything should be disabled
+emacs_use_package_which_key: false
+emacs_use_editorconfig: false
+emacs_use_org_download: false

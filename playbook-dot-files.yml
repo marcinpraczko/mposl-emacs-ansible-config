@@ -1,0 +1,28 @@
+# Run: ansible-playbook playbook-dot-files.yml --diff --check
+# Vars file: vars_computer1.yml (optional) and `vars` section in the playbook should be removed
+# And default should be always false (in default file)
+# TODO: ansible-playbook playbook-dot-files.yml -e "@vars_computer1.yml"
+---
+- name: Manage Emacs configuration
+  hosts: all
+
+  vars:
+    # TODO: Rename this variable to emacs_update_config
+    # Set following variables to true or false as needed
+    update_emacs: true
+    emacs_use_package_which_key: true
+    emacs_use_editorconfig: true
+    emacs_use_org_download: true
+
+  roles:
+    - role: emacs-config
+      tags:
+        - emacs-config
+
+  tasks:
+    - ansible.builtin.debug:
+        msg:
+          - "Playbook directory: {{ playbook_dir }}"
+          - "Home directory: {{ ansible_env.HOME }}"
+          - "Update Emacs: {{ update_emacs }}"
+          - "Use which-key package: {{ emacs_use_package_which_key }}"

@@ -1,0 +1,168 @@
+* Configuration of this file                                                    :noexport:
+
+#+COMMENT: This header is generated from yasnippet (main-header)
+#+COMMENT: version: 0.1.1
+
+#+TODO: TODO(t) NEXT(x) WIP(i) WAIT(w@/!) BACK-LATER(b@/!) | DONE(d!) CANCELED(c@)
+
+#+TITLE:     Emacs Configuration
+#+AUTHOR:    Marcin Praczko
+#+EMAIL:     marcin.praczko@gmail.com
+#+DATE:      2024-09-02
+
+#+COLUMNS: %PRIORITY(PR) %40ITEM(Task) %TAGS %TODO %CLOCKSUM %CLICKUP
+
+#+DESCRIPTION: Emacs Configuration
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+XSLT:
+
+#+COMMENT: Proper configuration needs be done with command: gilt overlay (Run from git root folder)
+#+SETUPFILE: html-themes/readtheorg/theme-readtheorg-local.setup
+#+HTML_HEAD: <style> #content{max-width:1800px;}</style>
+#+HTML_HEAD: <style> p{max-width:800px;}</style>
+#+HTML_HEAD: <style> li{max-width:800px;}</style
+
+* Table of content                                                              :noexport:
+
+* Details about this file
+
+** File location
+
+#+COMMENT: This section is generated from yasnippet (main-header)
+#+COMMENT: Replace =SRC file= with full path to src file: shortcut =C-c f=
+
+| Item           | Info                               |
+|----------------+------------------------------------|
+| SRC file:      | =${HOME}/.emacs.d/init-config.org= |
+| Template file: | [[file:{{ template_file_path }}][{{ template_file_path }}]]           |
+
+** Overview
+
+This file has been created to keep my ORG configuratio in one place.
+Finally I decided to start using ORG files for emacs config - as this allows clearly desribe configuration
+and take adventege of ORG workflow (TODO, checklist, etc).
+
+** Known issues
+
+For not this is working well - however there are some issues which I don't know how to quickly fix.
+
+Short list:
+
+- Org and Lisp code - sometimes idents changes and this requires fix it - ansible shows huge difference in diff
+- Working with BIG ORG / List is starting be not easy as I expected
+- Working with org.j2 - and change to org-mode - not always allows work with headlines as expected
+  Sometimes I am not able expand headline
+- Testing something quickly - I am doing directly on =~/.emacs.d/= files - and sometimes have no time
+  to sync changes back - when I am doing this - this is taking a lot of time.
+
+** Sync changes in ansible and emacs.d
+
+As describe above sync between =ansible code= (source) and =~/.emacs.d= code is not easy.
+I know that =emacs= can compare two buffers - however for now I am using =pycharm= (Allows me quickly compare changes)
+
+Following command should be run
+
+#+begin_src bash
+  # Navigate to ansible emacs project (tmux)
+  pycharm diff ~/.emacs.d/init-config.org ./roles/emacs-config/templates/init-config.org.j2
+#+end_src
+
+* TODO [0/2] General configuration                                                :config:
+
+This section has been created for general configuration.
+
+** TODO [0/1] Main general configuration                                          :static:
+
+- Change =YES/NO= to =Y/N=
+- Enable =vc-follow-symlinks= (Follow symbolic links)
+- Enable =auto-revert=
+
+#+begin_src emacs-lisp
+  ;; Change YES/NO for simple Y/N
+  (defalias 'yes-or-no-p 'y-or-n-p)
+
+  ;; Change prompt for symlinks
+  (setq vc-follow-symlinks t)
+
+  ;; Enable auto-revert (Reload files if changed on disk)
+  (global-auto-revert-mode 1)
+
+#+end_src
+
+** Custom configuration file                                                      :static:
+
+When some settings has been adjusted in emacs, it saves all those changes in =~/.emacs= file.
+Following configuration allows adjust this settings and have them in custom file.
+
+This allow to keep separate dynamic configuration manages by user and dynamic configuration managed
+by emacs it self.
+
+For testing - please run =M-x customize=
+
+#+begin_src emacs-lisp
+  ;; Specify the custom file location
+  (setq custom-file (expand-file-name "~/.emacs.d/custom-custom.el"))
+
+  ;; Load the custom file if it exists
+  (when (file-exists-p custom-file)
+    (load custom-file))
+#+end_src
+
+** Highlight matching parentheses                                                 :static:
+
+Following configuration allows highlight parenteses.
+
+Please use following shortcuts to move between parentheses:
+
+| Key     | Action             | Function                                                                              |
+|---------+--------------------+---------------------------------------------------------------------------------------|
+| =C-M-u= | =backward-up-list= | Move up one level of parentheses, going to the beginning of the current block or list |
+| =C-M-d= | =down-list=        | Move down into the next level of parentheses, entering the inner expression           |
+
+#+begin_src emacs-lisp
+  ;; Highlight matching parentheses
+  ;; Use 'C-M-u' and 'C-M-d' for navigation
+  (show-paren-mode 1)
+#+end_src
+
+** Disable bell when action can't be done                                         :static:
+
+#+begin_src emacs-lisp
+  ;; Disable bell when action can't be done
+  (setq ring-bell-function 'ignore)
+#+end_src
+
+** Align comments in lines to the right                                           :static:
+
+When one wants to have some comments on right, this function will align comments with =#= char.
+
+#+begin_src text
+  # Comments are not aligned
+  some text here     # Comment1
+  some text here with longer string  # Comment2
+
+  # After selection and running this function =C-c #= all comments are aligned
+  some text here       # Comment1
+  some text here with longer string # Comment2
+#+end_src
+
+#+begin_src emacs-lisp
+;; Select lines with comments after lines and use =C-c #=
+;; This will align comments:
+;; some text here                    # Comment1
+;; some text here with longer string # Comment2
+(defun mposl/align-to-hash-comments ()
+  "Align `#` comments in the selected region to the right of the longest line."
+  (interactive)
+  (align-regexp (region-beginning) (region-end) "\\(\\s-+\\)#" 1 1 t))
+(global-set-key (kbd "C-c #") 'mposl/align-to-hash-comments)
+#+end_src
+

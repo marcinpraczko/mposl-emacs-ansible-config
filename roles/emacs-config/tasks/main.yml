@@ -1,0 +1,64 @@
+---
+- block:
+  - name: Check if ~/Org directory exists
+    stat:
+      path: "{{ ansible_env.HOME }}/Org"
+    register: org_directory_stat
+
+  - name: Ensure ~/.emacs file is removed
+    ansible.builtin.file:
+      path: "{{ ansible_env.HOME }}/.emacs"
+      state: absent
+
+  - name: Ensure Emacs directories exist with 700 permissions
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0700'
+    loop: "{{ emacs_directories }}"
+
+  - name: Check if ~/.emacs.d/init.el exists and gather its information
+    stat:
+      path: "{{ ansible_env.HOME }}/.emacs.d/init.el"
+    register: emacs_init_el_stat
+
+  - name: Ensure ~/.emacs.d/init.el is removed if it exists and is a symlink or hardlink
+    ansible.builtin.file:
+      path: "{{ ansible_env.HOME }}/.emacs.d/init.el"
+      state: absent
+    when:
+      - emacs_init_el_stat.stat.exists
+      - emacs_init_el_stat.stat.islnk or emacs_init_el_stat.stat.nlink > 1
+
+  - name: Ensure ~/.emacs.d/init-config.el is removed if it exists and is a symlink or hardlink
+    ansible.builtin.file:
+      path: "{{ ansible_env.HOME }}/.emacs.d/init-config.el"
+      state: absent
+
+  - name: Create Emacs configuration files from templates
+    ansible.builtin.template:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0644'
+    loop:
+      - { src: "{{ role_path }}/templates/init-config.org.j2",
+          dest: "{{ ansible_env.HOME }}/.emacs.d/init-config.org" }
+      - { src: "{{ role_path }}/templates/init.el.j2",
+          dest: "{{ ansible_env.HOME }}/.emacs.d/init.el" }
+    vars:
+      template_file_path: "{{ item.src }}"
+
+    # Everytime the same copy of the file is created, symlink not allowed ORG-PUBLISH refresh the file
+  - name: Create Copy of ~/.emacs.d/init-config.org in ~/Org (Symlnk didn't work as expected)
+    ansible.builtin.template:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: '0644'
+    loop:
+      - { src: "{{ role_path }}/templates/init-config.org.j2",
+          dest: "{{ ansible_env.HOME }}/Org/emacs-init-config.org" }
+    vars:
+      template_file_path: "{{ item.src }}"
+    when: org_directory_stat.stat.exists
+
+  when: update_emacs

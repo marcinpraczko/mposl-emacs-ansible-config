@@ -1,0 +1,20 @@
+;; ======================================================================
+;; Initial configuration
+;; ----------------------------------------------------------------------
+;; Template file:
+;;   {{ template_file_path }}
+;; ======================================================================
+
+;; Configuration is loaded from ORG file with Babel
+;; NOTE: This will automatically create ~/.emacs.d/init-config.el file
+;;       However this 'el' file is not recreated if exists, this is why
+;;       ansible playbook is deleting this file
+(require 'org)
+(message "MPOSL: Start loading Emacs configuration from init-config.org...")
+
+(condition-case err
+    (progn
+      (org-babel-load-file (expand-file-name "~/.emacs.d/init-config.org"))
+      (message "MPOSL: Finish loading Emacs configuration: loaded successfully!"))
+  (error
+   (message "MPOSL: ERROR: Loading configuration: %s" (error-message-string err))))
